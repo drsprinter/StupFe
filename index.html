@@ -4,148 +4,53 @@
   <meta charset="UTF-8" />
   <title>AI重巣さん｜女性起業相談チャット</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- （スタイルは元ファイルから変更なし） -->
-</head>
-<body>
-  <div class="chat-wrapper">
-    <header class="chat-header">
-      <div class="avatar">
-        <img src="./ai_shigesu.png" alt="AI重巣さん" />
-      </div>
-      <div class="header-text">
-        <div class="header-title">AI重巣さん｜女性起業伴走チャット</div>
-        <div class="header-subtitle">福島発・女性の「わたしらしい起業」を一緒に整理します。</div>
-      </div>
-    </header>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Hiragino Sans", "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-    <main class="chat-log" id="chat-log"></main>
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      background: #ffeef4;
+      /* ふんわり花柄風グラデーション */
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(255, 192, 203, 0.5) 0, transparent 50%),
+        radial-gradient(circle at 80% 10%, rgba(255, 182, 193, 0.4) 0, transparent 55%),
+        radial-gradient(circle at 20% 80%, rgba(255, 228, 225, 0.5) 0, transparent 55%),
+        linear-gradient(135deg, #fff0f6, #ffe4ef);
+    }
 
-    <section class="chat-input-area">
-      <div class="input-row">
-        <textarea
-          id="user-input"
-          placeholder="今の状況やモヤモヤしていることを、話せる範囲で書いてみてくださいね。"
-        ></textarea>
-        <button id="send-btn">送信</button>
-      </div>
-      <div class="helper-row">
-        <div>
-          <span id="status-dot" class="status-dot"></span>
-          <span id="status-text">待機中</span>
-        </div>
-        <div class="sample-hint" id="sample-hint">
-          例）「子育てしながらできる小さな起業アイデアを一緒に考えてほしい」
-        </div>
-      </div>
-    </section>
-  </div>
+    .chat-wrapper {
+      width: 100%;
+      max-width: 900px;
+      margin: 24px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(255, 192, 203, 0.4);
+      backdrop-filter: blur(6px);
+    }
 
-<script>
-const chatLog = document.getElementById("chat-log");
-const userInput = document.getElementById("user-input");
-const sendBtn = document.getElementById("send-btn");
-const statusDot = document.getElementById("status-dot");
-const statusText = document.getElementById("status-text");
-const sampleHint = document.getElementById("sample-hint");
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 192, 203, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(90deg, #ffe4ef, #fff5fb);
+    }
 
-/* ✅ バックエンドURLを正しいものに変更 */
-const API_BASE_URL = "https://makeup-enz8.onrender.com";
-const CHAT_ENDPOINT = "/chat";
-
-function addMessage(role, text) {
-  const row = document.createElement("div");
-  row.classList.add("message-row", role);
-
-  if (role === "assistant") {
-    const avatarMini = document.createElement("div");
-    avatarMini.classList.add("avatar-mini");
-    avatarMini.innerHTML = '<img src="./ai_shigesu.png" alt="AI重巣さん" />';
-    row.appendChild(avatarMini);
-  }
-
-  const bubbleWrapper = document.createElement("div");
-
-  const bubble = document.createElement("div");
-  bubble.classList.add("message-bubble");
-  bubble.textContent = text;
-
-  bubbleWrapper.appendChild(bubble);
-
-  const meta = document.createElement("div");
-  meta.classList.add("message-meta");
-  const now = new Date();
-  meta.textContent =
-    (role === "assistant" ? "AI重巣さん" : "あなた") +
-    "・" +
-    now.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
-
-  bubbleWrapper.appendChild(meta);
-
-  row.appendChild(bubbleWrapper);
-  chatLog.appendChild(row);
-  chatLog.scrollTop = chatLog.scrollHeight;
-}
-
-function setLoading(isLoading) {
-  if (isLoading) {
-    sendBtn.disabled = true;
-    statusDot.classList.add("active");
-    statusText.textContent = "AI重巣さんが考え中…";
-  } else {
-    sendBtn.disabled = false;
-    statusDot.classList.remove("active");
-    statusText.textContent = "待機中";
-  }
-}
-
-async function sendMessage() {
-  const text = userInput.value.trim();
-  if (!text) return;
-
-  addMessage("user", text);
-  userInput.value = "";
-  setLoading(true);
-
-  try {
-    const res = await fetch(API_BASE_URL + CHAT_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    if (!res.ok) throw new Error("Server error");
-
-    const data = await res.json();
-    addMessage("assistant", data.reply || "応答が取得できませんでした。");
-
-  } catch (e) {
-    console.error(e);
-    addMessage("assistant", "通信エラーが発生しました。しばらく待って再度お試しください。");
-
-  } finally {
-    setLoading(false);
-  }
-}
-
-/* ✅ 送信はボタンのみ */
-sendBtn.addEventListener("click", sendMessage);
-
-/* ✅ Enterキー送信は無効（イベントを設定しない） */
-
-sampleHint.addEventListener("click", () => {
-  userInput.value = "子育てしながらできる小さな起業アイデアを一緒に考えてほしいです。";
-  userInput.focus();
-});
-
-// 初期メッセージ
-addMessage(
-  "assistant",
-  "はじめまして。AI重巣です。\n\n" +
-  "女性の「わたしらしい働き方・起業」について、" +
-  "一緒にゆっくり整理していく役割です。\n" +
-  "今のご状況やモヤモヤしていることを、" +
-  "話せる範囲で教えてくださいね。"
-);
-</script>
-</body>
-</html>
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      overflow: hidden;
