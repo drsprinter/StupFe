@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI重巣さん｜女性起業相談チャット</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Hiragino Sans", "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      background: #ffeef4;
+      /* ふんわり花柄風グラデーション */
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(255, 192, 203, 0.5) 0, transparent 50%),
+        radial-gradient(circle at 80% 10%, rgba(255, 182, 193, 0.4) 0, transparent 55%),
+        radial-gradient(circle at 20% 80%, rgba(255, 228, 225, 0.5) 0, transparent 55%),
+        linear-gradient(135deg, #fff0f6, #ffe4ef);
+    }
+
+    .chat-wrapper {
+      width: 100%;
+      max-width: 900px;
+      margin: 24px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(255, 192, 203, 0.4);
+      backdrop-filter: blur(6px);
+    }
+
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 192, 203, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(90deg, #ffe4ef, #fff5fb);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #ffb6c1;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #b04a6b;
+    }
+
+    .header-subtitle {
+      font-size: 0.82rem;
+      color: #a06a7a;
+    }
+
+    .chat-log {
+      flex: 1;
+      padding: 16px 20px 12px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .message-row {
+      display: flex;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .message-row.assistant {
+      align-items: flex-start;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .assistant .message-bubble {
+      background: #fff0f6;
+      border: 1px solid #ffc4dd;
+      border-top-left-radius: 4px;
+      color: #5f3149;
+    }
+
+    .user .message-bubble {
+      background: #f3f6ff;
+      border: 1px solid #c3d4ff;
+      border-top-right-radius: 4px;
+      color: #2f3555;
+    }
+
+    .message-meta {
+      font-size: 0.7rem;
+      color: #9f8ca0;
+      margin-top: 3px;
+    }
+
+    .message-row.assistant .avatar-mini {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid #ffb6c1;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .message-row.assistant .avatar-mini img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .chat-input-area {
+      padding: 12px 16px 14px;
+      border-top: 1px solid rgba(255, 192, 203, 0.3);
+      background: #fff9fc;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      min-height: 52px;
+      max-height: 120px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid #f3b6c7;
+      outline: none;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      background: #fff;
+      transition: border 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    textarea:focus {
+      border-color: #ff88aa;
+      box-shadow: 0 0 0 3px rgba(255, 136, 170, 0.25);
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff8fb3, #ff6f9e);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 90px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.12s ease;
+      box-shadow: 0 4px 10px rgba(255, 111, 158, 0.35);
+      white-space: nowrap;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    button:not(:disabled):active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(255, 111, 158, 0.25);
+    }
+
+    .helper-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #b58ba0;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+      display: inline-block;
+      background: #bbb;
+    }
+
+    .status-dot.active {
+      background: #ff82a6;
+      box-shadow: 0 0 0 4px rgba(255, 130, 166, 0.2);
+    }
+
+    .sample-hint {
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+
+    @media (max-width: 600px) {
+      .chat-wrapper {
+        margin: 0;
+        border-radius: 0;
+      }
+      .chat-header {
+        padding-inline: 14px;
+      }
+      .chat-log {
+        padding-inline: 12px;
+      }
+      .chat-input-area {
+        padding-inline: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-wrapper">
+    <header class="chat-header">
+      <div class="avatar">
+        <!-- あなたが用意するAI重巣さんアイコン -->
+        <img src="./ai_shigesu.png" alt="AI重巣さん" />
+      </div>
+      <div class="header-text">
+        <div class="header-title">AI重巣さん｜女性起業伴走チャット</div>
+        <div class="header-subtitle">福島発・女性の「わたしらしい起業」を一緒に整理します。</div>
+      </div>
+    </header>
+
+    <main class="chat-log" id="chat-log">
+      <!-- 初期メッセージ -->
+    </main>
+
+    <section class="chat-input-area">
+      <div class="input-row">
+        <textarea
+          id="user-input"
+          placeholder="今の状況やモヤモヤしていることを、話せる範囲で書いてみてくださいね。"
+        ></textarea>
+        <button id="send-btn">送信</button>
+      </div>
+      <div class="helper-row">
+        <div>
+          <span id="status-dot" class="status-dot"></span>
+          <span id="status-text">待機中</span>
+        </div>
+        <div class="sample-hint" id="sample-hint">
+          例）「子育てしながらできる小さな起業アイデアを一緒に考えてほしい」
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const chatLog = document.getElementById("chat-log");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const statusDot = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
+    const sampleHint = document.getElementById("sample-hint");
+
+    const API_BASE_URL = "https://あなたの-render-backend-url.onrender.com"; // ←ここをあなたのバックエンドURLに変更
+    const CHAT_ENDPOINT = "/chat";
+
+    function addMessage(role, text) {
+      const row = document.createElement("div");
+      row.classList.add("message-row", role);
+
+      if (role === "assistant") {
+        const avatarMini = document.createElement("div");
+        avatarMini.classList.add("avatar-mini");
+        avatarMini.innerHTML = '<img src="images/ai_shigesu.png" alt="AI重巣さん" />';
+        row.appendChild(avatarMini);
+      }
+
+      const bubbleWrapper = document.createElement("div");
+      const bubble = document.createElement("div");
+      bubble.classList.add("message-bubble");
+      bubble.textContent = text;
+      bubbleWrapper.appendChild(bubble);
+
+      const meta = document.createElement("div");
+      meta.classList.add("message-meta");
+      const now = new Date();
+      const timeText = now.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+      meta.textContent = (role === "assistant" ? "AI重巣さん" : "あなた") + "・" + timeText;
+      bubbleWrapper.appendChild(meta);
+
+      row.appendChild(bubbleWrapper);
+      chatLog.appendChild(row);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function setLoading(isLoading) {
+      if (isLoading) {
+        sendBtn.disabled = true;
+        statusDot.classList.add("active");
+        statusText.textContent = "AI重巣さんが考え中…";
+      } else {
+        sendBtn.disabled = false;
+        statusDot.classList.remove("active");
+        statusText.textContent = "待機中";
+      }
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      addMessage("user", text);
+      userInput.value = "";
+      setLoading(true);
+
+      try {
+        const res = await fetch(API_BASE_URL + CHAT_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: text
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error("サーバーエラー: " + res.status);
+        }
+
+        const data = await res.json();
+        const reply = data.reply || "すみません、うまくお返事を生成できませんでした。もう一度試してみてください。";
+        addMessage("assistant", reply);
+      } catch (err) {
+        console.error(err);
+        addMessage(
+          "assistant",
+          "通信エラーが発生したようです。少し時間をおいてから、もう一度送信してみてくださいね。"
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    sampleHint.addEventListener("click", () => {
+      userInput.value = "子育てしながらできる小さな起業アイデアを一緒に考えてほしいです。";
+      userInput.focus();
+    });
+
+    // 初期メッセージ
+    addMessage(
+      "assistant",
+      "はじめまして。AI重巣です。\n\n" +
+        "女性の「わたしらしい働き方・起業」について、一緒にゆっくり整理していく役割です。\n" +
+        "今のご状況や、モヤモヤしていること、叶えたいイメージなどを、話せる範囲で教えてくださいね。"
+    );
+  </script>
+</body>
+</html>
