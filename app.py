@@ -60,3 +60,11 @@ def chat(req: ChatRequest):
 
     reply_text = completion.choices[0].message.content.strip()
     return ChatResponse(reply=reply_text)
+
+
+# 🔽 これを追加すれば、python app.py でもサーバが立つ
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", "10000"))
+    uvicorn.run("app:app", host="0.0.0.0", port=port)
