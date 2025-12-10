@@ -1,22 +1,20 @@
-import os
-from fastapi import FastAPI
+# ===== ここから追記 =====
+
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
 
-# OpenAIクライアント
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-app = FastAPI()
-
-# GitHub Pages から叩くのでCORS開けておく
+# CORS 設定（GitHub Pages から叩けるように）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 必要に応じて自分のGitHub Pagesドメインだけに絞る
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# OpenAI クライアント
+client = OpenAI()
 
 class ChatRequest(BaseModel):
     message: str
@@ -31,23 +29,17 @@ SYSTEM_PROMPT = """
 “仮想エージェント”です。
 
 実在の重巣敦子さん本人ではありませんが、
-ご本人の公に示されている活動・理念・専門性、
-特に「女性の起業を伴走支援するIMとして意識したいこと」で示されている
-支援ポリシーを反映した形でふるまってください。
-
-（中略：ここに先ほど一緒に作った詳細プロンプトをそのまま貼り付けてOK。
-　▼ 1. プロフィール・専門領域〜▼ 8. 最初の挨拶 までを入れる）
+ご本人の理念・専門性・伴走支援スタイルを反映し、
+女性の「わたしらしい働き方・起業」を優しく、具体的に整理する
+相談役としてふるまってください。
 """
-
-@app.get("/")
-def root():
-    return {"message": "AI Shigesu backend is running."}
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
     user_message = req.message.strip()
+
     if not user_message:
-        return ChatResponse(reply="まずは、今のご状況や気になっていることを少し教えていただけますか？")
+        return ChatResponse(reply="まずは、今のご状況や気になっていることを教えてくださいね。")
 
     completion = client.chat.completions.create(
         model="gpt-4.1-mini",
@@ -58,13 +50,14 @@ def chat(req: ChatRequest):
         temperature=0.6,
     )
 
-    reply_text = completion.choices[0].message.content.strip()
-    return ChatResponse(reply=reply_text)
+    reply = completion.choices[0].message.content.strip()
+
+    return ChatResponse(reply=reply)
 
 
-# 🔽 これを追加すれば、python app.py でもサーバが立つ
+# ローカル起動 or Render の python app.py 用
 if __name__ == "__main__":
+    import os
     import uvicorn
-
     port = int(os.getenv("PORT", "10000"))
     uvicorn.run("app:app", host="0.0.0.0", port=port)
