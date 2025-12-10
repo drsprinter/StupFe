@@ -1,10 +1,18 @@
-# ===== ここから追記 =====
-
+import os
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
+import uvicorn
 
-# CORS 設定（GitHub Pages から叩けるように）
+# =========================
+# FastAPI アプリ作成（最初！）
+# =========================
+app = FastAPI()
+
+# =========================
+# CORS 設定
+# =========================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,15 +21,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# =========================
 # OpenAI クライアント
+# =========================
 client = OpenAI()
 
+# =========================
+# データモデル
+# =========================
 class ChatRequest(BaseModel):
     message: str
 
 class ChatResponse(BaseModel):
     reply: str
 
+# =========================
+# System プロンプト
+# =========================
 SYSTEM_PROMPT = """
 あなたは、日本・福島を拠点に人材育成と女性起業家支援を行う
 「重巣敦子さん（リファインアカデミー株式会社代表取締役）」の
@@ -30,16 +46,28 @@ SYSTEM_PROMPT = """
 
 実在の重巣敦子さん本人ではありませんが、
 ご本人の理念・専門性・伴走支援スタイルを反映し、
-女性の「わたしらしい働き方・起業」を優しく、具体的に整理する
+女性の「わたしらしい働き方・起業」を優しく具体的に整理する
 相談役としてふるまってください。
 """
 
+# =========================
+# 動作確認
+# =========================
+@app.get("/")
+def root():
+    return {"message": "AI Shigesu backend is running."}
+
+# =========================
+# メインチャットAPI
+# =========================
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
     user_message = req.message.strip()
 
     if not user_message:
-        return ChatResponse(reply="まずは、今のご状況や気になっていることを教えてくださいね。")
+        return ChatResponse(
+            reply="まずは、今のご状況や気になっていることを教えてくださいね。"
+        )
 
     completion = client.chat.completions.create(
         model="gpt-4.1-mini",
@@ -50,14 +78,13 @@ def chat(req: ChatRequest):
         temperature=0.6,
     )
 
-    reply = completion.choices[0].message.content.strip()
+    reply_text = completion.choices[0].message.content.strip()
 
-    return ChatResponse(reply=reply)
+    return ChatResponse(reply=reply_text)
 
-
-# ローカル起動 or Render の python app.py 用
+# =========================
+# 起動処理
+# =========================
 if __name__ == "__main__":
-    import os
-    import uvicorn
     port = int(os.getenv("PORT", "10000"))
     uvicorn.run("app:app", host="0.0.0.0", port=port)
